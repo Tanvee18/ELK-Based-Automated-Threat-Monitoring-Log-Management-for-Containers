@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    networks:
+      - cyber-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    volumes:
+      - ./elk/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5044:5044"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - cyber-network
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    container_name: filebeat
+    user: root
+    volumes:
+      - ./elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - app-logs:/app/logs:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - strict.perms=false
+    depends_on:
+      logstash:
+        condition: service_started
+    networks:
+      - cyber-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: cyber_threats
+      MYSQL_USER: cyber_user
+      MYSQL_PASSWORD: cyber_password
+    volumes:
+      - ./elk/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - cyber-network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  cyber-app:
+    build: ./app
+    container_name: cyber-app
+    volumes:
+      - app-logs:/app/logs
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - cyber-network
+
+  streamlit-dashboard:
+    build: ./streamlit
+    container_name: streamlit-dashboard
+    ports:
+      - "8501:8501"
+    environment:
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - cyber-network
+
+  elk-setup:
+    image: alpine:latest
+    container_name: elk-setup
+    volumes:
+      - ./elk/init/setup_ilm.sh:/setup_ilm.sh:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "apk add --no-cache curl bash && /setup_ilm.sh"]
+    networks:
+      - cyber-network
+
+networks:
+  cyber-network:
+    driver: bridge
+
+volumes:
+  app-logs:

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "e4e1b2a0-1234-4567-89ab-cdef01234567",
+    "title": "Suspicious Login Attempt",
+    "type": "Authentication Bypass",
+    "severity": "High",
+    "sector": "Banking",
+    "source": "CERT-In",
+    "timestamp": "2024-04-29T10:00:00Z"
+  },
+  {
+    "id": "f5f2c3b1-2345-5678-90bc-defa12345678",
+    "title": "Malicious Payload Detected",
+    "type": "Malware Injection",
+    "severity": "Critical",
+    "sector": "Healthcare",
+    "source": "AbuseIPDB",
+    "timestamp": "2024-04-29T10:05:00Z"
+  },
+  {
+    "id": "a1b2c3d4-3456-6789-01cd-efab23456789",
+    "title": "High Volume Traffic Spike",
+    "type": "DDoS Attack",
+    "severity": "Medium",
+    "sector": "Government",
+    "source": "Simulated-Feed-A",
+    "timestamp": "2024-04-29T10:10:00Z"
+  }
+]

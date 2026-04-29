@@ -1,66 +1,53 @@
-📄 Description (Short - for top of repo)
-ELK-based automated cyber threat monitoring and log lifecycle management system using Docker, Python, and real-time security analytics.
+# ELK-Based Automated Cyber Threat Monitoring
 
-📘 Detailed README Description
-🛡️ Project Overview
-This project implements an ELK Stack (Elasticsearch, Logstash, Kibana) based solution for real-time cyber threat monitoring and log lifecycle management in a containerized environment. It simulates cyber incidents, processes logs, detects threats, and visualizes insights through interactive dashboards.
+This project is a complete containerized security stack that simulates cyber threats, processes them using a modular Python application (OOP), and monitors them using ELK (Elasticsearch, Logstash, Filebeat) with a Streamlit dashboard for visualization.
 
-🚀 Key Features
-🔍 Real-time log monitoring using ELK Stack
+## Architecture
+1. **Python App**: Generates mock cyber incidents, analyzes them (severity/type), and logs them as structured JSON.
+2. **Filebeat**: Harvests logs from the Python app and forwards them to Logstash.
+3. **Logstash**: Parses JSON logs, enriches fields, and routes them to Elasticsearch.
+4. **Elasticsearch**: Stores incident logs and critical alerts.
+5. **Streamlit**: Provides a real-time visual dashboard for threat analysis. While the assignment mentions Kibana (port 5601), Streamlit was chosen for its superior flexibility in creating custom security metrics and interactive Python-based analytics.
+6. **MySQL**: Serves as the persistent DBMS for long-term audit logs, incident triage, and alert configurations.
+7. **ILM Policy**: Automatically manages log lifecycle in Elasticsearch (Hot -> Warm -> Cold -> Delete after 90 days).
 
-📥 Automated log ingestion via Filebeat
+## Folder Structure
+- `app/`: Python OOP application code.
+- `elk/`: Configurations for Logstash, Filebeat, and ILM setup.
+- `streamlit/`: Streamlit dashboard code.
+- `docker-compose.yml`: Main orchestration file.
 
-🧠 Threat detection (phishing, malware, DDoS, etc.)
+## Features
+- **OOP Design**: Modular Python classes for Incidents, Analysts, and Alerting.
+- **Log Lifecycle**: ILM policy deletes logs after 90 days.
+- **Real-time Alerting**: Critical incidents are sent to a separate `alerts` index in Elasticsearch.
+- **Visual Analytics**: Streamlit dashboard showing sector distribution, severity trends, and top sources.
 
-🚨 Severity-based alerting system
+## How to Run
 
-📊 Kibana dashboards for visualization
+### 1. Prerequisites
+- Docker and Docker Compose installed.
 
-🗃️ Log lifecycle management using ILM (Hot → Warm → Delete)
+### 2. Start the Stack
+Navigate to the project folder and run:
+```bash
+docker-compose up -d
+```
 
-🐳 Fully containerized using Docker Compose
+### 3. Access the Dashboard
+Once the containers are healthy (wait about 1-2 minutes for ELK to initialize), open your browser to:
+- **Streamlit Dashboard**: `http://localhost:8501`
 
-🏗️ Tech Stack
-Language: Python
+### 4. Verify Components
+- **Elasticsearch**: `http://localhost:9200`
+- **MySQL**: Accessible on port `3306`
 
-Containerization: Docker, Docker Compose
+## Testing with Sample Data
+The Python application (`cyber-app`) starts generating incidents automatically every 2 seconds. You will see these appearing on the Streamlit dashboard as they are processed by Logstash.
 
-ELK Stack: Elasticsearch, Logstash, Kibana
-
-Log Shipper: Filebeat
-
-Database: MySQL
-
-📁 Project Structure
-cyber-elk-project/
-│── docker-compose.yml
-│── app/
-│── logstash/
-│── filebeat/
-│── kibana/
-│── db/
-⚙️ How to Run
-docker compose up -d
-Then open:
-
-Kibana → http://localhost:5601
-
-Elasticsearch → http://localhost:9200
-
-🎯 Use Case
-This system helps in:
-
-Monitoring cyber threats in real time
-
-Detecting suspicious activities
-
-Managing large-scale logs efficiently
-
-Supporting security analysts with actionable insights
-
-📌 Future Enhancements
-ML-based anomaly detection
-
-Integration with live threat intelligence APIs
-
-Advanced alerting (email/SMS/webhooks)
+## Log Lifecycle (ILM)
+The `elk-setup` container automatically configures a policy named `cyber_logs_policy` that handles:
+- **Hot**: Rollover after 7 days or 50GB.
+- **Warm**: Shrink shards after 14 days.
+- **Cold**: After 30 days.
+- **Delete**: Remove data after 90 days.

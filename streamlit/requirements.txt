@@ -1,0 +1,5 @@
+streamlit
+pandas
+elasticsearch
+plotly
+mysql-connector-python
